@@ -350,7 +350,7 @@ p{color:rgba(255,255,255,.55);font-size:15px;line-height:1.6;margin-bottom:28px}
 
       const res = await fetch("/api/generate-report", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:4000,
+        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:5000,
           messages:[{ role:"user", content:`Você é especialista em mindfulness e psicologia positiva. Gere um relatório de devolutiva personalizado e acolhedor em português brasileiro, com base nos resultados do FFMQ-BR.\n\nNome: ${name||"Participante"}\nData: ${new Date().toLocaleDateString("pt-BR")}\nÍndice geral: ${totalPct}%\n\nResultados:\n${scoreLines}\n\nEscreva o relatório com estas seções:\n1. Saudação personalizada\n2. O que é mindfulness e o FFMQ-BR (breve)\n3. Análise de cada uma das 5 facetas com interpretação acolhedora\n4. Pontos fortes identificados\n5. Áreas de desenvolvimento com sugestões práticas\n6. Conclusão motivadora\n7. Referências científicas\n\nIMPORTANTE: Use apenas títulos com # e ##, listas com - e parágrafos simples. NÃO use **negrito**, tabelas markdown, --- ou > blocos. Tom: acolhedor, científico mas acessível, positivo e prático.` }]
         })
       });
