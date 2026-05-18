@@ -317,6 +317,10 @@ export default function App() {
   const totalPct   = Math.round((totalScore / 195) * 100);
 
   async function downloadReport() {
+    const pw = window.open('', '_blank');
+    if (!pw) { alert("Permita popups neste site para gerar o relatório."); return; }
+    pw.document.write('<html><body style="font-family:sans-serif;padding:40px;color:#333"><p>⏳ Gerando relatório com IA, aguarde…</p></body></html>');
+    pw.document.close();
     setGenerating(true);
     try {
       const scoreLines = Object.entries(factors).map(([k,f]) => {
@@ -405,7 +409,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;-webkit-print-color-adjus
 Baer et al. (2006) • Barros et al. (2014) • Instrumento validado para população brasileira</div>
 </div></body></html>`;
 
-      const pw=window.open('','_blank');
+      pw.document.open();
       pw.document.write(html);
       pw.document.close();
       pw.onload=()=>{ pw.focus(); pw.print(); };
