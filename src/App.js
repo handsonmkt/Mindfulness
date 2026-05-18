@@ -319,7 +319,27 @@ export default function App() {
   async function downloadReport() {
     const pw = window.open('', '_blank');
     if (!pw) { alert("Permita popups neste site para gerar o relatório."); return; }
-    pw.document.write('<html><body style="font-family:sans-serif;padding:40px;color:#333"><p>⏳ Gerando relatório com IA, aguarde…</p></body></html>');
+    pw.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>FFMQ-BR — Gerando Relatório</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.box{text-align:center;padding:48px 40px;max-width:480px}
+.icon{font-size:52px;margin-bottom:24px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.08)}}
+h1{font-family:'Lora',serif;color:white;font-size:26px;font-weight:700;margin-bottom:12px}
+p{color:rgba(255,255,255,.55);font-size:15px;line-height:1.6;margin-bottom:28px}
+.bar{width:260px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 auto;overflow:hidden}
+.fill{height:100%;width:100%;background:linear-gradient(90deg,#2DD4BF,#3B82F6);border-radius:2px;animation:load 2.5s ease-in-out infinite}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+</style></head><body>
+<div class="box">
+  <div class="icon">🧘</div>
+  <h1>Gerando seu relatório…</h1>
+  <p>A IA está analisando seus resultados e preparando uma devolutiva personalizada. Isso leva alguns segundos.</p>
+  <div class="bar"><div class="fill"></div></div>
+</div>
+</body></html>`);
     pw.document.close();
     setGenerating(true);
     try {
@@ -330,7 +350,7 @@ export default function App() {
 
       const res = await fetch("/api/generate-report", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:2500,
+        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:4000,
           messages:[{ role:"user", content:`Você é especialista em mindfulness e psicologia positiva. Gere um relatório de devolutiva personalizado e acolhedor em português brasileiro, com base nos resultados do FFMQ-BR.\n\nNome: ${name||"Participante"}\nData: ${new Date().toLocaleDateString("pt-BR")}\nÍndice geral: ${totalPct}%\n\nResultados:\n${scoreLines}\n\nEscreva o relatório com estas seções:\n1. Saudação personalizada\n2. O que é mindfulness e o FFMQ-BR (breve)\n3. Análise de cada uma das 5 facetas com interpretação acolhedora\n4. Pontos fortes identificados\n5. Áreas de desenvolvimento com sugestões práticas\n6. Conclusão motivadora\n7. Referências científicas\n\nIMPORTANTE: Use apenas títulos com # e ##, listas com - e parágrafos simples. NÃO use **negrito**, tabelas markdown, --- ou > blocos. Tom: acolhedor, científico mas acessível, positivo e prático.` }]
         })
       });
