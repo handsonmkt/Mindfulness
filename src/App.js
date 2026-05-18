@@ -324,7 +324,7 @@ export default function App() {
         return `${f.icon} ${f.label.replace("\n"," ")}: ${s}/${f.max} (${pct}%) — ${getLevel(pct).label}`;
       }).join("\n");
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/generate-report", {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
           messages:[{ role:"user", content:`Você é especialista em mindfulness e psicologia positiva. Gere um relatório de devolutiva personalizado e acolhedor em português brasileiro, com base nos resultados do FFMQ-BR.\n\nNome: ${name||"Participante"}\nData: ${new Date().toLocaleDateString("pt-BR")}\nÍndice geral: ${totalPct}%\n\nResultados:\n${scoreLines}\n\nEscreva o relatório com estas seções:\n1. Saudação personalizada\n2. O que é mindfulness e o FFMQ-BR (breve)\n3. Análise de cada uma das 5 facetas com interpretação acolhedora\n4. Pontos fortes identificados\n5. Áreas de desenvolvimento com sugestões práticas\n6. Conclusão motivadora\n7. Referências\n\nTom: acolhedor, científico mas acessível, positivo e prático. Máximo 700 palavras.` }]
