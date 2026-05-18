@@ -326,8 +326,8 @@ export default function App() {
 
       const res = await fetch("/api/generate-report", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1000,
-          messages:[{ role:"user", content:`Você é especialista em mindfulness e psicologia positiva. Gere um relatório de devolutiva personalizado e acolhedor em português brasileiro, com base nos resultados do FFMQ-BR.\n\nNome: ${name||"Participante"}\nData: ${new Date().toLocaleDateString("pt-BR")}\nÍndice geral: ${totalPct}%\n\nResultados:\n${scoreLines}\n\nEscreva o relatório com estas seções:\n1. Saudação personalizada\n2. O que é mindfulness e o FFMQ-BR (breve)\n3. Análise de cada uma das 5 facetas com interpretação acolhedora\n4. Pontos fortes identificados\n5. Áreas de desenvolvimento com sugestões práticas\n6. Conclusão motivadora\n7. Referências\n\nTom: acolhedor, científico mas acessível, positivo e prático. Máximo 700 palavras.` }]
+        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:2500,
+          messages:[{ role:"user", content:`Você é especialista em mindfulness e psicologia positiva. Gere um relatório de devolutiva personalizado e acolhedor em português brasileiro, com base nos resultados do FFMQ-BR.\n\nNome: ${name||"Participante"}\nData: ${new Date().toLocaleDateString("pt-BR")}\nÍndice geral: ${totalPct}%\n\nResultados:\n${scoreLines}\n\nEscreva o relatório com estas seções:\n1. Saudação personalizada\n2. O que é mindfulness e o FFMQ-BR (breve)\n3. Análise de cada uma das 5 facetas com interpretação acolhedora\n4. Pontos fortes identificados\n5. Áreas de desenvolvimento com sugestões práticas\n6. Conclusão motivadora\n7. Referências científicas\n\nIMPORTANTE: Use apenas títulos com # e ##, listas com - e parágrafos simples. NÃO use **negrito**, tabelas markdown, --- ou > blocos. Tom: acolhedor, científico mas acessível, positivo e prático.` }]
         })
       });
       const data = await res.json();
@@ -359,12 +359,23 @@ ${[.25,.5,.75,1].map(r=>{const[x,y]=ep(0,eR*r);return`<text x="${(x+4).toFixed(1
 <div style="font-size:12px;color:#94a3b8;margin-top:4px">${s}/${f.max} pontos</div></div>`;
       }).join("");
 
-      const reportHTML=reportText.split("\n").map(l=>
-        l.startsWith("##")?`<h3 style="color:#1e3a5f;margin:18px 0 5px;font-size:15px">${l.replace(/^#+\s*/,"")}</h3>`
-        :l.startsWith("#")?`<h2 style="color:#1e3a5f;margin:22px 0 7px;font-size:17px">${l.replace(/^#+\s*/,"")}</h2>`
-        :l.trim()?`<p style="color:#374151;line-height:1.78;margin:6px 0;font-size:14px">${l}</p>`
-        :"<br/>"
-      ).join("");
+      function mdLine(t){
+        return t
+          .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g,'<em>$1</em>');
+      }
+      let reportHTML='', inList=false;
+      for(const l of reportText.split("\n")){
+        if(l.startsWith("### ")){if(inList){reportHTML+='</ul>';inList=false;}reportHTML+=`<h3 style="color:#1e3a5f;margin:20px 0 5px;font-size:15px;font-weight:700">${mdLine(l.replace(/^#+\s*/,""))}</h3>`;}
+        else if(l.startsWith("## ")){if(inList){reportHTML+='</ul>';inList=false;}reportHTML+=`<h2 style="color:#1e3a5f;margin:24px 0 7px;font-size:17px;font-weight:700">${mdLine(l.replace(/^#+\s*/,""))}</h2>`;}
+        else if(l.startsWith("# ")){if(inList){reportHTML+='</ul>';inList=false;}reportHTML+=`<h2 style="color:#1e3a5f;margin:26px 0 8px;font-size:19px;font-weight:700">${mdLine(l.replace(/^#+\s*/,""))}</h2>`;}
+        else if(/^-{3,}$/.test(l.trim())){if(inList){reportHTML+='</ul>';inList=false;}reportHTML+=`<hr style="border:none;border-top:1px solid #e2e8f0;margin:14px 0"/>`;}
+        else if(l.startsWith("> ")){if(inList){reportHTML+='</ul>';inList=false;}reportHTML+=`<blockquote style="border-left:3px solid #2DD4BF;padding:8px 14px;margin:8px 0;background:#f0fdfa;color:#374151;font-size:14px;border-radius:0 6px 6px 0">${mdLine(l.slice(2))}</blockquote>`;}
+        else if(/^[-*] /.test(l)){if(!inList){reportHTML+='<ul style="padding-left:22px;margin:6px 0">';inList=true;}reportHTML+=`<li style="color:#374151;line-height:1.75;font-size:14px;margin:3px 0">${mdLine(l.slice(2))}</li>`;}
+        else if(l.trim()){if(inList){reportHTML+='</ul>';inList=false;}reportHTML+=`<p style="color:#374151;line-height:1.8;margin:7px 0;font-size:14px">${mdLine(l)}</p>`;}
+        else{if(inList){reportHTML+='</ul>';inList=false;}reportHTML+="<br/>";}
+      }
+      if(inList)reportHTML+='</ul>';
 
       const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <title>Relatório FFMQ-BR — ${name||"Participante"}</title>
@@ -394,11 +405,10 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;-webkit-print-color-adjus
 Baer et al. (2006) • Barros et al. (2014) • Instrumento validado para população brasileira</div>
 </div></body></html>`;
 
-      const blob=new Blob([html],{type:"text/html"});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement("a");
-      a.href=url; a.download=`FFMQ_${(name||"resultado").replace(/\s+/g,"_")}.html`; a.click();
-      URL.revokeObjectURL(url);
+      const pw=window.open('','_blank');
+      pw.document.write(html);
+      pw.document.close();
+      pw.onload=()=>{ pw.focus(); pw.print(); };
     } catch(e){ alert("Erro ao gerar relatório. Tente novamente."); }
     setGenerating(false);
   }
@@ -482,10 +492,10 @@ Baer et al. (2006) • Barros et al. (2014) • Instrumento validado para popula
 
         <div style={{ textAlign:"center", marginBottom:14 }}>
           <button className="dlb" onClick={downloadReport} disabled={generating}>
-            {generating ? "⏳ Gerando com IA…" : "⬇ Baixar Relatório Completo"}
+            {generating ? "⏳ Gerando com IA…" : "⬇ Gerar Relatório em PDF"}
           </button>
           <p style={{ color:"rgba(255,255,255,.28)", fontSize:12, marginTop:8 }}>
-            Inclui gráfico radar + devolutiva personalizada gerada por IA
+            Abre em nova aba — use Ctrl+P / Cmd+P para salvar como PDF
           </p>
         </div>
 
